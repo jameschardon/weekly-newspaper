@@ -1,25 +1,24 @@
-import { execFile } from "child_process";
-import { promisify } from "util";
+import { execFileSync } from "child_process";
 
-const execFileAsync = promisify(execFile);
-
-export async function claudeCallAsync(
+export function claudeCallAsync(
   prompt: string,
   model = "claude-opus-4-7",
 ): Promise<string> {
-  const args = ["--print", "--model", model];
-  const { stdout } = await execFileAsync("claude", args, {
-    input: prompt,
-    timeout: 15 * 60 * 1000,
-    maxBuffer: 20 * 1024 * 1024,
-  });
-  return stdout.trim();
+  return Promise.resolve(
+    execFileSync("claude", ["--print", "--model", model], {
+      input: prompt,
+      encoding: "utf-8",
+      timeout: 15 * 60 * 1000,
+      maxBuffer: 20 * 1024 * 1024,
+    }).trim()
+  );
 }
 
 export function truncateToWords(text: string, maxWords: number): string {
   const words = text.split(/\s+/);
   if (words.length <= maxWords) return text;
-  return words.slice(0, maxWords).join(" ") + "\n[... tronque]";
+  return words.slice(0, maxWords).join(" ") + "
+[... tronque]";
 }
 
 export function stripHtml(html: string): string {
