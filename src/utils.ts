@@ -1,19 +1,37 @@
-import { execFile } from "child_process";
-import { promisify } from "util";
-
-const execFileAsync = promisify(execFile);
+import { spawn } from "child_process";
 
 export async function claudeCallAsync(
   prompt: string,
   model = "claude-opus-4-7",
 ): Promise<string> {
-  const args = ["--print", "--model", model];
-  const { stdout } = await execFileAsync("claude", args, {
-    input: prompt,
-    timeout: 15 * 60 * 1000,
-    maxBuffer: 20 * 1024 * 1024,
+  return new Promise((resolve, reject) => {
+    const child = spawn("claude", ["--print", "--model", model], {
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    const chunks: Buffer[] = [];
+    const errChunks: Buffer[] = [];
+    const timer = setTimeout(() => {
+      child.kill("SIGKILL");
+      reject(new Error("claude call timed out after 15 minutes"));
+    }, 15 * 60 * 1000);
+    child.stdout.on("data", (d: Buffer) => chunks.push(d));
+    child.stderr.on("data", (d: Buffer) => errChunks.push(d));
+    child.on("error", (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      if (code === 0) {
+        resolve(Buffer.concat(chunks).toString("utf8").trim());
+      } else {
+        const stderr = Buffer.concat(errChunks).toString("utf8");
+        reject(new Error(`claude exited with code ${code}: ${stderr}`));
+      }
+    });
+    child.stdin.write(prompt);
+    child.stdin.end();
   });
-  return stdout.trim();
 }
 
 export function truncateToWords(text: string, maxWords: number): string {
