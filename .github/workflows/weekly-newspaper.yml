@@ -1,0 +1,49 @@
+name: WeeklyNewspaper
+
+on:
+  schedule:
+    - cron: '0 6 * * 0'   # Sunday 06:00 UTC (08:00 CEST)
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Node deps
+        run: npm ci
+
+      - name: Install Claude CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Install rclone
+        run: |
+          curl -fsSL https://downloads.rclone.org/rclone-current-linux-amd64.zip -o rclone.zip
+          unzip -q rclone.zip
+          sudo mv rclone-*-linux-amd64/rclone /usr/local/bin/
+          rm -rf rclone.zip rclone-*-linux-amd64
+
+      - name: Restore rclone config
+        run: |
+          mkdir -p ~/.config/rclone
+          echo "${{ secrets.RCLONE_CONFIG_B64 }}" | base64 -d > ~/.config/rclone/rclone.conf
+
+      - name: Generate weekly newspaper
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          ELUCID_EMAIL: ${{ secrets.ELUCID_EMAIL }}
+          ELUCID_PASSWORD: ${{ secrets.ELUCID_PASSWORD }}
+        run: npx tsx src/pipeline.ts
+
+      - name: Upload EPUB to Google Drive
+        run: |
+          mkdir -p ~/Newspaper
+          rclone copy ~/Newspaper/ gdrive:Newspaper/ --include "*.epub" -v
