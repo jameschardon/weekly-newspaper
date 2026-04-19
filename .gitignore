@@ -3,3 +3,4 @@ dist/
 .env
 *.epub
 /output/
+CURRENT_WORK.md
