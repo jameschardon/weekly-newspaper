@@ -6,9 +6,8 @@ const execFileAsync = promisify(execFile);
 export async function claudeCallAsync(
   prompt: string,
   model = "claude-opus-4-7",
-  maxTokens = 16384,
 ): Promise<string> {
-  const args = ["--print", "--model", model, "--max-tokens", String(maxTokens)];
+  const args = ["--print", "--model", model];
   const { stdout } = await execFileAsync("claude", args, {
     input: prompt,
     timeout: 15 * 60 * 1000,
