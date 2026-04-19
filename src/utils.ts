@@ -17,8 +17,7 @@ export function claudeCallAsync(
 export function truncateToWords(text: string, maxWords: number): string {
   const words = text.split(/\s+/);
   if (words.length <= maxWords) return text;
-  return words.slice(0, maxWords).join(" ") + "
-[... tronque]";
+  return words.slice(0, maxWords).join(" ") + "\n[... tronque]";
 }
 
 export function stripHtml(html: string): string {
