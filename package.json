@@ -7,7 +7,6 @@
     "generate": "tsx src/pipeline.ts"
   },
   "dependencies": {
-    "@anthropic-ai/claude-code": "^1.0.0",
     "date-fns": "^3.6.0",
     "dotenv": "^17.4.2",
     "epub-gen-memory": "^1.1.1",
