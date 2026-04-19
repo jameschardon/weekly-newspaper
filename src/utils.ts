@@ -19,7 +19,8 @@ export async function claudeCallAsync(
 export function truncateToWords(text: string, maxWords: number): string {
   const words = text.split(/\s+/);
   if (words.length <= maxWords) return text;
-  return words.slice(0, maxWords).join(" ") + "\n[... tronqué]";
+  return words.slice(0, maxWords).join(" ") + "
+[... tronqué]";
 }
 
 export function stripHtml(html: string): string {
